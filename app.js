@@ -644,7 +644,7 @@ async function loadInsights() {
   if (!container) return;
 
   try {
-    let response = await fetch("/api/insights", { cache: "no-store" });
+    let response = await fetch("https://healthcare-insights-backend.onrender.com/api/insights", { cache: "no-store" });
     let insights = [];
     const isJsonResponse = response.headers.get("content-type")?.includes("application/json");
 
