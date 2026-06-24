@@ -1,0 +1,13 @@
+<svg width="360" height="80" viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f75b8" />
+      <stop offset="100%" stop-color="#5b9b3f" />
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="30" fill="url(#logoGrad)" />
+  <path d="M18 34 C24 22 30 20 42 20 C54 20 60 28 66 34" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" />
+  <path d="M16 44 C24 36 32 34 44 34 C56 34 62 40 68 44" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" />
+  <text x="96" y="34" font-family="Source Sans 3, Arial, sans-serif" font-size="26" font-weight="800" fill="#0f4f8a">Impact</text>
+  <text x="96" y="60" font-family="Source Sans 3, Arial, sans-serif" font-size="22" fill="#5b9b3f">advisors</text>
+</svg>
