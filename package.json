@@ -1,0 +1,23 @@
+{
+  "name": "healthcare-consultant-resource-guide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Searchable healthcare consultant resource website generated from the Impact Advisors-style HTML guide.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build && node scripts/copy-static.js",
+    "preview": "vite preview --host 0.0.0.0",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "cors": "latest"
+  },
+  "devDependencies": {
+    "vite": "latest"
+  }
+}

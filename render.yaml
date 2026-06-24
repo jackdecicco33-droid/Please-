@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: healthcare-consultant-guide
+    runtime: node
+    region: ohio
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/insights
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: FORMS_WEBHOOK_SECRET
+        sync: false
+    disk:
+      name: insights-data
+      mountPath: /var/data
+      sizeGB: 1
