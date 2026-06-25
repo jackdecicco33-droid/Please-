@@ -73,7 +73,49 @@ app.get('/api/insights', async (req, res) => {
     res.json([]);
   }
 });
+// Endpoint to delete one insight from the website/backend
+app.delete('/api/insights/:submittedAt', async (req, res) => {
+  try {
+    if (WEBHOOK_SECRET && req.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
+    const submittedAtToDelete = decodeURIComponent(req.params.submittedAt);
+
+    let insights = [];
+    try {
+      const data = await fs.readFile(INSIGHTS_FILE, 'utf-8');
+      insights = JSON.parse(data);
+    } catch (e) {
+      return res.status(404).json({ error: 'No insights found' });
+    }
+
+    const originalCount = insights.length;
+
+    const updatedInsights = insights.filter(
+      insight => insight.submittedAt !== submittedAtToDelete
+    );
+
+    if (updatedInsights.length === originalCount) {
+      return res.status(404).json({ error: 'Insight not found' });
+    }
+
+    await fs.writeFile(
+      INSIGHTS_FILE,
+      JSON.stringify(updatedInsights, null, 2),
+      'utf-8'
+    );
+
+    res.json({
+      success: true,
+      deletedSubmittedAt: submittedAtToDelete,
+      remaining: updatedInsights.length
+    });
+  } catch (error) {
+    console.error('Error deleting insight:', error);
+    res.status(500).json({ error: 'Failed to delete insight' });
+  }
+});
 async function startServer() {
   await fs.mkdir(DATA_DIR, { recursive: true });
 
