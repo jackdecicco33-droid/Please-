@@ -645,17 +645,13 @@ async function loadInsights() {
 
   try {
     let response = await fetch("https://healthcare-insights-backend.onrender.com/api/insights", { cache: "no-store" });
-    let insights = [];
-    const isJsonResponse = response.headers.get("content-type")?.includes("application/json");
+let insights = [];
 
-    // Keep the page usable when it is running from Vite without the backend.
-    if (!response.ok || !isJsonResponse) {
-      response = await fetch(`insights.json?ts=${Date.now()}`, { cache: "no-store" });
-    }
+if (!response.ok) {
+  throw new Error(`Could not load live insights. HTTP ${response.status}`);
+}
 
-    if (response.ok) {
-      insights = await response.json();
-    }
+insights = await response.json();
 
     // Also load any local submissions
     const localInsights = loadLocalInsights();
