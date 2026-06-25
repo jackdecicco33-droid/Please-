@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Manage Insights</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef5fb;
+      color: #083b5c;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .admin-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #063b5c;
+    }
+
+    .admin-note {
+      background: #f4f9ed;
+      border-left: 5px solid #6aad2f;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .secret-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1;
+      min-width: 280px;
+      padding: 12px;
+      border: 1px solid #c8d7e3;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #0a5c91;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #084a75;
+    }
+
+    .delete-btn {
+      background: #b42318;
+      margin-top: 12px;
+    }
+
+    .delete-btn:hover {
+      background: #8f1d14;
+    }
+
+    .status {
+      margin: 16px 0;
+      font-weight: 700;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .insight-card {
+      border: 1px solid #d7e4ef;
+      border-radius: 12px;
+      padding: 18px;
+      background: #f9fcff;
+    }
+
+    .insight-card h3 {
+      margin-top: 0;
+      color: #063b5c;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #dcefff;
+      color: #064b75;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #516575;
+      word-break: break-word;
+    }
+
+    a {
+      color: #0a5c91;
+    }
+  </style>
+</head>
+<body>
+  <main class="admin-container">
+    <h1>Manage Employee Industry Insights</h1>
+
+    <div class="admin-note">
+      <strong>Admin use only:</strong> Enter the backend secret to load and delete submitted insights.
+      Deleting here removes the response from the website/backend, but it does not remove the row from Excel.
+    </div>
+
+    <div class="secret-row">
+      <input
+        id="secretInput"
+        type="password"
+        placeholder="Enter FORMS_WEBHOOK_SECRET"
+      />
+      <button onclick="loadInsights()">Load Responses</button>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <section id="insightsContainer" class="insight-grid"></section>
+  </main>
+
+  <script>
+    const API_BASE = "https://healthcare-insights-backend.onrender.com";
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      }[char]));
+    }
+
+    function encodeSubmittedAt(value) {
+      return encodeURIComponent(value);
+    }
+
+    async function loadInsights() {
+      const container = document.getElementById("insightsContainer");
+      const status = document.getElementById("status");
+
+      status.textContent = "Loading responses...";
+      container.innerHTML = "";
+
+      try {
+        const response = await fetch(`${API_BASE}/api/insights`, {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Could not load insights. HTTP ${response.status}`);
+        }
+
+        const insights = await response.json();
+
+        if (!insights || insights.length === 0) {
+          status.textContent = "No responses are currently stored in the backend.";
+          return;
+        }
+
+        status.textContent = `${insights.length} response${insights.length === 1 ? "" : "s"} loaded.`;
+
+        container.innerHTML = insights.map(insight => `
+          <article class="insight-card">
+            <span class="tag">${escapeHtml(insight.sourceType || "Insight")}</span>
+            <h3>${escapeHtml(insight.title || "Untitled Insight")}</h3>
+            <p><strong>Submitted By:</strong> ${escapeHtml(insight.name || "Anonymous")}</p>
+            <p><strong>Role:</strong> ${escapeHtml(insight.role || "Not provided")}</p>
+            <p><strong>Takeaway:</strong> ${escapeHtml(insight.takeaways || "No takeaway provided.")}</p>
+            <p><strong>Why It Matters:</strong> ${escapeHtml(insight.whyItMatters || "Not provided.")}</p>
+            <p><strong>Audience:</strong> ${escapeHtml(insight.audience || "General audience")}</p>
+            <p class="small"><strong>Submitted At:</strong> ${escapeHtml(insight.submittedAt || "Missing timestamp")}</p>
+            ${
+              insight.link && insight.link !== "N/A"
+                ? `<p><a href="${escapeHtml(insight.link)}" target="_blank" rel="noopener">View Source</a></p>`
+                : ""
+            }
+            <button class="delete-btn" onclick="deleteInsight('${escapeHtml(insight.submittedAt)}')">
+              Delete from Website
+            </button>
+          </article>
+        `).join("");
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Unable to load responses. Check the backend URL or browser console.";
+      }
+    }
+
+    async function deleteInsight(submittedAt) {
+      const secret = document.getElementById("secretInput").value.trim();
+      const status = document.getElementById("status");
+
+      if (!secret) {
+        alert("Enter the backend secret first.");
+        return;
+      }
+
+      if (!submittedAt) {
+        alert("This response is missing a submittedAt value and cannot be deleted with this method.");
+        return;
+      }
+
+      const confirmed = confirm(
+        `Are you sure you want to delete this response from the website?\n\nSubmitted At: ${submittedAt}`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        status.textContent = "Deleting response...";
+
+        const response = await fetch(`${API_BASE}/api/insights/${encodeSubmittedAt(submittedAt)}`, {
+          method: "DELETE",
+          headers: {
+            "x-webhook-secret": secret
+          }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || `Delete failed. HTTP ${response.status}`);
+        }
+
+        status.textContent = "Response deleted successfully. Reloading list...";
+        await loadInsights();
+      } catch (error) {
+        console.error(error);
+        status.textContent = `Delete failed: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
